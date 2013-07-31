@@ -130,21 +130,13 @@
 	        
 	        const uLong ZipCompressionMethodStore = 0;
 	        
-	        BOOL fileIsSymbolicLink = NO;
-	        
-	        if((fileInfo.compression_method == ZipCompressionMethodStore) && // Is it compressed?
-	           (S_ISDIR(fileInfo.external_fa)) && // Is it marked as a directory
-	           (fileInfo.compressed_size > 0)) // Is there any data?
-	        {
-	            fileIsSymbolicLink = YES;
-	        }
+	        BOOL fileIsSymbolicLink = (fileInfo.compression_method == ZipCompressionMethodStore) && // Is it compressed?
+									  (S_ISDIR(fileInfo.external_fa)) && // Is it marked as a directory
+									  (fileInfo.compressed_size > 0); // Is there any data?
 	        
 			// Check if it contains directory
 			NSString *strPath = [NSString stringWithCString:filename encoding:NSUTF8StringEncoding];
-			BOOL isDirectory = NO;
-			if (filename[fileInfo.size_filename-1] == '/' || filename[fileInfo.size_filename-1] == '\\') {
-				isDirectory = YES;
-			}
+			BOOL isDirectory = (filename[fileInfo.size_filename-1] == '/' || filename[fileInfo.size_filename-1] == '\\');
 			free(filename);
 			
 			// Contains a path
@@ -175,8 +167,31 @@
 				continue;
 			}
 	        
-			if(!fileIsSymbolicLink)
+			if(fileIsSymbolicLink)
 	        {
+				// Get the path for the symbolic link
+	            
+	            NSMutableString* destinationPath = [NSMutableString string];
+	            
+	            int bytesRead = 0;
+	            while((bytesRead = unzReadCurrentFile(zip, buffer, 4096)) > 0)
+	            {
+	                buffer[bytesRead] = 0;
+	                [destinationPath appendString:[NSString stringWithUTF8String:(const char*)buffer]];
+	            }
+	            
+	            //NSLog(@"Symlinking to: %@", destinationPath);
+	            
+	            // Create the symbolic link
+	            NSError* symlinkError = nil;
+	            BOOL symlink = [fileManager createSymbolicLinkAtPath:fullPath withDestinationPath:destinationPath error:&symlinkError];
+	            if(!symlink)
+	            {
+	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", fullPath, destinationPath, symlinkError.localizedDescription);
+	            }
+			}
+			else
+			{
 	            FILE *fp = fopen((const char*)[fullPath UTF8String], "wb");
 	            while (fp) {
 	                int readBytes = unzReadCurrentFile(zip, buffer, 4096);
@@ -222,33 +237,6 @@
                             NSLog(@"[SSZipArchive] Failed to set attributes - whilst setting permissions");
                         }
                     }
-	            }
-	        }
-	        else
-	        {
-	            // Get the path for the symbolic link
-	            
-	            NSURL* symlinkURL = [NSURL fileURLWithPath:fullPath];
-	            NSMutableString* destinationPath = [NSMutableString string];
-	            
-	            int bytesRead = 0;
-	            while((bytesRead = unzReadCurrentFile(zip, buffer, 4096)) > 0)
-	            {
-	                buffer[bytesRead] = 0;
-	                [destinationPath appendString:[NSString stringWithUTF8String:(const char*)buffer]];
-	            }
-	            
-	            //NSLog(@"Symlinking to: %@", destinationPath);
-	            
-	            NSURL* destinationURL = [NSURL fileURLWithPath:destinationPath];
-	            
-	            // Create the symbolic link
-	            NSError* symlinkError = nil;
-	            [fileManager createSymbolicLinkAtURL:symlinkURL withDestinationURL:destinationURL error:&symlinkError];
-	            
-	            if(symlinkError != nil)
-	            {
-	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", symlinkURL.absoluteString, destinationURL.absoluteString, symlinkError.localizedDescription);
 	            }
 	        }
 			
