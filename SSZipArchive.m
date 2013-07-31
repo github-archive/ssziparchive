@@ -406,8 +406,8 @@
         afileName = [fileName UTF8String];
     }
     
-    zip_fileinfo zipInfo;
-    memset(&zipInfo, 0, sizeof(zipInfo));
+    zip_fileinfo zipInfo = {};
+    //memset(&zipInfo, 0, sizeof(zipInfo));
     
     NSDictionary *attr = [[NSFileManager defaultManager] attributesOfItemAtPath:path error: nil];
     if( attr )
