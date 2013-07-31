@@ -171,7 +171,6 @@
 	        {
 				// Get the path for the symbolic link
 	            
-	            NSURL* symlinkURL = [NSURL fileURLWithPath:fullPath];
 	            NSMutableString* destinationPath = [NSMutableString string];
 	            
 	            int bytesRead = 0;
@@ -183,14 +182,12 @@
 	            
 	            //NSLog(@"Symlinking to: %@", destinationPath);
 	            
-	            NSURL* destinationURL = [NSURL fileURLWithPath:destinationPath];
-	            
 	            // Create the symbolic link
 	            NSError* symlinkError = nil;
-	            BOOL symlink = [fileManager createSymbolicLinkAtURL:symlinkURL withDestinationURL:destinationURL error:&symlinkError];
+	            BOOL symlink = [fileManager createSymbolicLinkAtPath:fullPath withDestinationPath:destinationPath error:&symlinkError];
 	            if(!symlink)
 	            {
-	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", symlinkURL.absoluteString, destinationURL.absoluteString, symlinkError.localizedDescription);
+	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", fullPath, destinationPath, symlinkError.localizedDescription);
 	            }
 			}
 			else
