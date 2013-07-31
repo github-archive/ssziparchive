@@ -167,8 +167,35 @@
 				continue;
 			}
 	        
-			if(!fileIsSymbolicLink)
+			if(fileIsSymbolicLink)
 	        {
+				// Get the path for the symbolic link
+	            
+	            NSURL* symlinkURL = [NSURL fileURLWithPath:fullPath];
+	            NSMutableString* destinationPath = [NSMutableString string];
+	            
+	            int bytesRead = 0;
+	            while((bytesRead = unzReadCurrentFile(zip, buffer, 4096)) > 0)
+	            {
+	                buffer[bytesRead] = 0;
+	                [destinationPath appendString:[NSString stringWithUTF8String:(const char*)buffer]];
+	            }
+	            
+	            //NSLog(@"Symlinking to: %@", destinationPath);
+	            
+	            NSURL* destinationURL = [NSURL fileURLWithPath:destinationPath];
+	            
+	            // Create the symbolic link
+	            NSError* symlinkError = nil;
+	            [fileManager createSymbolicLinkAtURL:symlinkURL withDestinationURL:destinationURL error:&symlinkError];
+	            
+	            if(symlinkError != nil)
+	            {
+	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", symlinkURL.absoluteString, destinationURL.absoluteString, symlinkError.localizedDescription);
+	            }
+			}
+			else
+			{
 	            FILE *fp = fopen((const char*)[fullPath UTF8String], "wb");
 	            while (fp) {
 	                int readBytes = unzReadCurrentFile(zip, buffer, 4096);
@@ -214,33 +241,6 @@
                             NSLog(@"[SSZipArchive] Failed to set attributes - whilst setting permissions");
                         }
                     }
-	            }
-	        }
-	        else
-	        {
-	            // Get the path for the symbolic link
-	            
-	            NSURL* symlinkURL = [NSURL fileURLWithPath:fullPath];
-	            NSMutableString* destinationPath = [NSMutableString string];
-	            
-	            int bytesRead = 0;
-	            while((bytesRead = unzReadCurrentFile(zip, buffer, 4096)) > 0)
-	            {
-	                buffer[bytesRead] = 0;
-	                [destinationPath appendString:[NSString stringWithUTF8String:(const char*)buffer]];
-	            }
-	            
-	            //NSLog(@"Symlinking to: %@", destinationPath);
-	            
-	            NSURL* destinationURL = [NSURL fileURLWithPath:destinationPath];
-	            
-	            // Create the symbolic link
-	            NSError* symlinkError = nil;
-	            [fileManager createSymbolicLinkAtURL:symlinkURL withDestinationURL:destinationURL error:&symlinkError];
-	            
-	            if(symlinkError != nil)
-	            {
-	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", symlinkURL.absoluteString, destinationURL.absoluteString, symlinkError.localizedDescription);
 	            }
 	        }
 			
