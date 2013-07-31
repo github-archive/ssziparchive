@@ -187,9 +187,8 @@
 	            
 	            // Create the symbolic link
 	            NSError* symlinkError = nil;
-	            [fileManager createSymbolicLinkAtURL:symlinkURL withDestinationURL:destinationURL error:&symlinkError];
-	            
-	            if(symlinkError != nil)
+	            BOOL symlink = [fileManager createSymbolicLinkAtURL:symlinkURL withDestinationURL:destinationURL error:&symlinkError];
+	            if(!symlink)
 	            {
 	                NSLog(@"Failed to create symbolic link at \"%@\" to \"%@\". Error: %@", symlinkURL.absoluteString, destinationURL.absoluteString, symlinkError.localizedDescription);
 	            }
