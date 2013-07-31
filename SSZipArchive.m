@@ -130,21 +130,13 @@
 	        
 	        const uLong ZipCompressionMethodStore = 0;
 	        
-	        BOOL fileIsSymbolicLink = NO;
-	        
-	        if((fileInfo.compression_method == ZipCompressionMethodStore) && // Is it compressed?
-	           (S_ISDIR(fileInfo.external_fa)) && // Is it marked as a directory
-	           (fileInfo.compressed_size > 0)) // Is there any data?
-	        {
-	            fileIsSymbolicLink = YES;
-	        }
+	        BOOL fileIsSymbolicLink = (fileInfo.compression_method == ZipCompressionMethodStore) && // Is it compressed?
+									  (S_ISDIR(fileInfo.external_fa)) && // Is it marked as a directory
+									  (fileInfo.compressed_size > 0); // Is there any data?
 	        
 			// Check if it contains directory
 			NSString *strPath = [NSString stringWithCString:filename encoding:NSUTF8StringEncoding];
-			BOOL isDirectory = NO;
-			if (filename[fileInfo.size_filename-1] == '/' || filename[fileInfo.size_filename-1] == '\\') {
-				isDirectory = YES;
-			}
+			BOOL isDirectory = (filename[fileInfo.size_filename-1] == '/' || filename[fileInfo.size_filename-1] == '\\');
 			free(filename);
 			
 			// Contains a path
