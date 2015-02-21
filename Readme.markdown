@@ -1,3 +1,5 @@
+**NOTE: This fork is no longer supported or updated by GitHub. See https://github.com/soffes/ssziparchive**
+
 # SSZipArchive
 
 SSZipArchive is a simple utility class for zipping and unzipping files. Features:
